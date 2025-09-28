@@ -3,7 +3,6 @@ import pkg from 'express-oauth2-jwt-bearer';
 const { auth: checkJwt, requiredScopes } = pkg;
 import userModel from '../models/user.model.js';
 import foodPartnerModel from '../models/foodpartner.model.js';
-
 import { auth as oidcAuth } from 'express-openid-connect';
 
 import dotenv from 'dotenv';
@@ -42,7 +41,7 @@ console.log('Client Secret loaded?', !!process.env.AUTH0_CLIENT_SECRET ? 'Locked
 // =====================
 export function setupUserAuth(app) {
   // login/logout/profile
-  app.use(oidcAuth(oidcConfig));
+  
 
   // Spy on callback (temp debug—remove later)
   app.use('/callback', (req, res, next) => {
