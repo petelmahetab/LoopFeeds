@@ -16,7 +16,7 @@ const authConfig = {
   clientID: process.env.AUTH0_CLIENT_ID,
   clientSecret: process.env.AUTH0_CLIENT_SECRET,
   issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-  authorizationParams: { response_type: 'code', scope: 'openid profile email' }
+  // authorizationParams: { response_type: 'code', scope: 'openid profile email' }
 };
 app.use(auth(authConfig));
 
@@ -44,17 +44,12 @@ authController.setupUserAuth(app);
 // app.get('/login', (req, res) => res.oidc.login());
 app.get('/logout', (req, res) => res.oidc.logout({ returnTo: '/' }));
 
-// app.get('/login', (req, res, next) => {
-//   console.log('🚀 /login hit');
-//   console.log('req.oidc exists?', !!req.oidc);
-//   console.log('req.oidc.login exists?', !!req.oidc?.login);
-//   next();
-// });
 app.get('/login', (req, res) => {
+  console.log('Authenticated?', req.oidc.isAuthenticated());
+  console.log('Session:', req.session); // Check for lingering data
   if (!req.oidc.isAuthenticated()) return res.oidc.login();
   res.redirect('/profile');
 });
- 
 
 authController.setupFoodPartnerRoutes?.(app);
 
