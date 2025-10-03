@@ -41,12 +41,12 @@ app.get("/", (req, res) => {
 
 // call the authController setup
 authController.setupUserAuth(app);
-// app.get('/login', (req, res) => res.oidc.login());
+
 app.get('/logout', (req, res) => res.oidc.logout({ returnTo: '/' }));
 
 app.get('/login', (req, res) => {
   console.log('Authenticated?', req.oidc.isAuthenticated());
-  console.log('Session:', req.session); // Check for lingering data
+  console.log('Session:', req.session); 
   if (!req.oidc.isAuthenticated()) return res.oidc.login();
   res.redirect('/profile');
 });
