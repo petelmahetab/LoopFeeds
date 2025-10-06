@@ -46,8 +46,10 @@ app.get('/logout', (req, res) => res.oidc.logout({ returnTo: '/' }));
 
 app.get('/login', (req, res) => {
   console.log('Authenticated?', req.oidc.isAuthenticated());
-  console.log('Session:', req.session); 
-  if (!req.oidc.isAuthenticated()) return res.oidc.login();
+  if (!req.oidc.isAuthenticated()) {
+    
+    return res.oidc.login({ returnTo: '/profile', authorizationParams: { response_type: 'code' } });
+  }
   res.redirect('/profile');
 });
 

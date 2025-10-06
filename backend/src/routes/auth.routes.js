@@ -1,5 +1,5 @@
 import express from 'express';
-import { getFoodPartnerProfile } from '../controllers/auth.controller.js'; // or named import
+import { getFoodPartnerProfile } from '../controllers/auth.controller.js'; 
 
 
 const router = express.Router();
