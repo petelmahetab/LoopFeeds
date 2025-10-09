@@ -11,7 +11,7 @@ import connectDB from './src/db/db.js';
 
 connectDB();
 
-// Paths to mkcert files
+
 const keyPath = path.join('./certs', 'localhost+2-key.pem');
 const certPath = path.join('./certs', 'localhost+2.pem');
 
@@ -23,12 +23,11 @@ const options = {
 const HTTPS_PORT = process.env.HTTPS_PORT || 3001;
 const HTTP_PORT = process.env.PORT || 3000;
 
-// Start HTTPS server
 https.createServer(options, app).listen(HTTPS_PORT, () => {
   console.log(`✅ HTTPS Server running at https://localhost:${HTTPS_PORT}`);
 });
 
-// Optional: Redirect HTTP → HTTPS
+
 http.createServer((req, res) => {
   res.writeHead(301, {
     "Location": `https://localhost:${HTTPS_PORT}${req.url}`
