@@ -43,11 +43,7 @@ export function setupUserAuth(app) {
   // login/logout/profile
   
 
-  // Spy on callback (temp debug—remove later)
-  app.use('/callback', (req, res, next) => {
-    console.log('Callback query:', req.query);  // Expect code & state
-    next();
-  });
+ 
 
   app.get('/profile', (req, res) => {
     res.json({
