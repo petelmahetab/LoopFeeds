@@ -55,8 +55,14 @@ app.get('/login', (req, res) => {
 
 authController.setupFoodPartnerRoutes?.(app);
 
-app.use('/api/auth', authRoutes);
 app.use('/api/food', foodRoutes);
 app.use('/api/food-partner', foodPartnerRoutes);
+
+app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
+app.use((err, req, res, _next) => {
+  console.error('Global error:', err);
+  res.status(err.status || 500).json({ error: err.message || 'Server error' });
+});
+
 
 export default app;  
