@@ -10,7 +10,7 @@ import { uploadFile } from '../services/storage.service.js';
 export async function createFood(req, res, next) {
   try {
     /* 1.  file upload */
-    const file = req.file;               // given by multer
+    const file = req.file;               
     if (!file) return res.status(400).json({ error: 'Image file required' });
 
     const fileUploadResult = await uploadFile(file.buffer, uuid());

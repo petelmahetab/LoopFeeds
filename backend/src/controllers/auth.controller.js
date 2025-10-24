@@ -43,15 +43,32 @@ export function setupUserAuth(app) {
   // login/logout/profile
   
 
- 
+  app.get('/profile', async (req, res, next) => {
+    if (!req.oidc.isAuthenticated()) return res.redirect('/login');
+    console.log('TokenSet:', JSON.stringify(req.oidc.tokenSet, null, 2));
 
-  app.get('/profile', (req, res) => {
-    res.json({
-      message: 'User profile unlocked!',
-      loggedIn: req.oidc.isAuthenticated(),
-      user: req.oidc.user
-    });
+    try {
+      /* 1.  v2.x – tokenSet is already there */
+      const tokenSet = req.oidc.tokenSet;
+      if (!tokenSet || !tokenSet.access_token)
+        return res.status(503).json({ error: 'No access token (audience mismatch?)' });
+  
+      /* 2.  fetch userInfo with the token */
+      const userinfo = await req.oidc.fetchUserInfo();
+  
+      /* 3.  upsert into YOUR MongoDB */
+      const localUser = await userModel.findOneAndUpdate(
+        { auth0Id: userinfo.sub },
+        { fullName: userinfo.name, email: userinfo.email, picture: userinfo.picture },
+        { upsert: true, new: true, runValidators: true }
+      );
+  
+      res.json({ message: 'Profile', auth0: userinfo, local: localUser });
+    } catch (e) {
+      next(e);
+    }
   });
+
 
   app.get('/logout', (req, res) => {
     res.oidc.logout('/');

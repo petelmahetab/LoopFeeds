@@ -16,7 +16,11 @@ const authConfig = {
   clientID: process.env.AUTH0_CLIENT_ID,
   clientSecret: process.env.AUTH0_CLIENT_SECRET,
   issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-  // authorizationParams: { response_type: 'code', scope: 'openid profile email' }
+  authorizationParams: {
+    response_type: 'code',
+    scope: 'openid profile email',
+    audience: process.env.AUTH0_AUDIENCE   
+  }
 };
 app.use(auth(authConfig));
 
@@ -48,7 +52,15 @@ app.get('/login', (req, res) => {
   console.log('Authenticated?', req.oidc.isAuthenticated());
   if (!req.oidc.isAuthenticated()) {
     
-    return res.oidc.login({ returnTo: '/profile', authorizationParams: { response_type: 'code' } });
+    return res.oidc.login({
+      returnTo: '/profile',
+      authorizationParams: {
+        response_type: 'code',
+        scope: 'openid profile email',
+        audience: process.env.AUTH0_AUDIENCE
+      }
+    });    
+    
   }
   res.redirect('/profile');
 });
