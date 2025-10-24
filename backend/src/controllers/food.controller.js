@@ -5,27 +5,34 @@ import { generateEmbedding } from '../services/ai.service.js';
 import likeModel from '../models/likes.model.js';
 import saveModel from '../models/save.model.js';
 import { v4 as uuid } from 'uuid';
+import { uploadFile } from '../services/storage.service.js';
 
-export async function createFood(req, res) {
-    const fileUploadResult = await uploadFile(req.file.buffer, uuid());
-  
-    // Generate AI embedding
+export async function createFood(req, res, next) {
+  try {
+    /* 1.  file upload */
+    const file = req.file;               // given by multer
+    if (!file) return res.status(400).json({ error: 'Image file required' });
+
+    const fileUploadResult = await uploadFile(file.buffer, uuid());
+
+    /* 2.  AI embedding */
     const embedding = await generateEmbedding(req.body.description);
-  
-    const foodItem = await FoodModel.create({
+
+    /* 3.  create record */
+    const foodItem = await foodModel.create({
       name: req.body.name,
       description: req.body.description,
       video: fileUploadResult.url,
-      foodPartner: req.foodPartner._id,
+      foodPartner: req.foodPartner?._id ?? null,   // optional until you add auth
       niche: req.body.niche,
-      embedding: embedding
+      embedding
     });
-  
-    res.status(201).json({
-      message: "Food created successfully",
-      food: foodItem
-    });
+
+    res.status(201).json({ message: 'Food created', food: foodItem });
+  } catch (e) {
+    next(e);          // reaches global handler → JSON error
   }
+}
 
 export async function getFoodItems(req, res) {
   const foodItems = await foodModel.find({});
