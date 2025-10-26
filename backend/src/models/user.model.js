@@ -1,7 +1,11 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-    fullName: {
+    auth0Id: {
+         type: String, 
+         required: true,
+         unique: true 
+    },fullName: {
         type: String,
         required: true
     },

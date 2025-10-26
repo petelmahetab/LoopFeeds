@@ -15,14 +15,14 @@ const oidcConfig = {
   secret: process.env.AUTH0_SECRET,  
   baseURL: process.env.AUTH0_BASE_URL, 
   clientID: process.env.AUTH0_CLIENT_ID,
-  clientSecret: process.env.AUTH0_CLIENT_SECRET,  // <-- The hero addition!
+  // clientSecret: process.env.AUTH0_CLIENT_SECRET,  
   issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
   // Debug-friendly params (keep these)
   authorizationParams: {
     response_type: 'code',
     response_mode: 'query',  // URL-visible for now
     scope: 'openid profile email',
-    audience: process.env.AUTH0_AUDIENCE
+    // audience: process.env.AUTH0_AUDIENCE
   }
 };
 
@@ -45,21 +45,23 @@ export function setupUserAuth(app) {
 
   app.get('/profile', async (req, res, next) => {
     if (!req.oidc.isAuthenticated()) return res.redirect('/login');
-    console.log('TokenSet:', JSON.stringify(req.oidc.tokenSet, null, 2));
-
+  
     try {
-      /* 1.  v2.x – tokenSet is already there */
-      const tokenSet = req.oidc.tokenSet;
-      if (!tokenSet || !tokenSet.access_token)
-        return res.status(503).json({ error: 'No access token (audience mismatch?)' });
+      const idToken = req.oidc.idToken;  // <-- Real prop: ID string
+      if (!idToken) return res.status(503).json({ error: 'No id_token' });
   
-      /* 2.  fetch userInfo with the token */
-      const userinfo = await req.oidc.fetchUserInfo();
+      // Use pre-fetched user (faster than fetchUserInfo)
+      const userinfo = req.oidc.user || await req.oidc.fetchUserInfo();  // Fallback
   
-      /* 3.  upsert into YOUR MongoDB */
+      // Upsert to Atlas (add auth0Id if missing in schema)
       const localUser = await userModel.findOneAndUpdate(
-        { auth0Id: userinfo.sub },
-        { fullName: userinfo.name, email: userinfo.email, picture: userinfo.picture },
+        { auth0Id: userinfo.sub },  // Link via sub
+        { 
+          auth0Id: userinfo.sub,  // Ensure set
+          fullName: userinfo.name, 
+          email: userinfo.email, 
+          picture: userinfo.picture 
+        },
         { upsert: true, new: true, runValidators: true }
       );
   
@@ -68,7 +70,6 @@ export function setupUserAuth(app) {
       next(e);
     }
   });
-
 
   app.get('/logout', (req, res) => {
     res.oidc.logout('/');

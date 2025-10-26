@@ -57,7 +57,8 @@ app.get('/login', (req, res) => {
       authorizationParams: {
         response_type: 'code',
         scope: 'openid profile email',
-        audience: process.env.AUTH0_AUDIENCE
+        response_mode: 'query',
+        // audience: process.env.AUTH0_AUDIENCE
       }
     });    
     
