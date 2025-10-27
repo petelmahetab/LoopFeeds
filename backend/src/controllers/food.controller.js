@@ -42,26 +42,42 @@ export async function getFoodItems(req, res) {
   });
 }
 
-export async function likeFood(req, res) {
-  const { foodId } = req.body;
-  const user = req.user;
+export async function likeFood(req, res, next) {
+  try {
+    const { foodId } = req.body;
 
-  const isAlreadyLiked = await likeModel.findOne({ user: user._id, food: foodId });
+    // 1.  grab Auth0 user (injected by express-openid-connect)
+    if (!req.oidc.isAuthenticated())
+      return res.status(401).json({ error: 'Please log in first' });
 
-  if (isAlreadyLiked) {
-    await likeModel.deleteOne({ user: user._id, food: foodId });
-    await foodModel.findByIdAndUpdate(foodId, { $inc: { likeCount: -1 } });
+    const auth0Id = req.oidc.user.sub;   // <--  Auth0 unique id
+    if (!foodId || !auth0Id)
+      return res.status(400).json({ error: 'foodId required' });
 
-    return res.status(200).json({ message: "Food unliked successfully" });
+    // 2.  find **your** local user (or create on-the-fly)
+    const localUser = await userModel.findOneAndUpdate(
+      { auth0Id },
+      { fullName: req.oidc.user.name, email: req.oidc.user.email },
+      { upsert: true, new: true }
+    );
+
+    const userId = localUser._id;   //  MongoDB _id
+
+    // 3.  like / unlike logic
+    const isAlreadyLiked = await likeModel.findOne({ user: userId, food: foodId });
+
+    if (isAlreadyLiked) {
+      await likeModel.deleteOne({ user: userId, food: foodId });
+      await foodModel.findByIdAndUpdate(foodId, { $inc: { likeCount: -1 } });
+      return res.status(200).json({ message: 'Food unliked successfully' });
+    }
+
+    const like = await likeModel.create({ user: userId, food: foodId });
+    await foodModel.findByIdAndUpdate(foodId, { $inc: { likeCount: 1 } });
+    res.status(201).json({ message: 'Food liked successfully', like });
+  } catch (e) {
+    next(e);
   }
-
-  const like = await likeModel.create({ user: user._id, food: foodId });
-  await foodModel.findByIdAndUpdate(foodId, { $inc: { likeCount: 1 } });
-
-  res.status(201).json({
-    message: "Food liked successfully",
-    like
-  });
 }
 
 export async function saveFood(req, res) {
